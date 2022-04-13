@@ -113,6 +113,10 @@ int main(int argc, char *argv[])
  	}
 
     char background_color[] = "#3e3e3e";
+    hu = getenv("HbB");
+    if (hu && strlen(hu) == 6)
+        strncpy(background_color + 1, hu, 6);
+
     char font_color[] = "#ececec";
 
 	struct sigaction act_expire, act_ignore;
