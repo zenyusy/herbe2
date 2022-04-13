@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: apt update
+      run: sudo apt update
+    - name: apt install
+      run: sudo apt install -y --no-install-recommends build-essential libx11-dev libxft-dev valgrind
+    - name: Build
+      run: make
+    - name: valgrind
+      run: valgrind ./herbe abc
+    #- uses: actions/upload-artifact@v2
+    #  with:
+    #      name: binout
+    #      path: ./herbe

@@ -1,3 +1,9 @@
+# changes
+
+no more config(.def).h
+
+---
+
 # 🌱 herbe
 > Daemon-less notifications without D-Bus. Minimal and lightweight.
 

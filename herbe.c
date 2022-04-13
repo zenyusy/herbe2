@@ -9,7 +9,16 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
-#include "config.h"
+const char *border_color = "#ececec";
+const char *font_pattern = "Source Code Pro:size=18";
+const unsigned line_spacing = 5;
+const unsigned int padding = 15;
+const unsigned int width = 450;
+const unsigned int border_size = 2;
+const unsigned int duration = 5; /* in seconds */
+
+#define DISMISS_BUTTON Button1
+#define ACTION_BUTTON Button3
 
 #define EXIT_ACTION 0
 #define EXIT_FAIL 1
@@ -87,6 +96,10 @@ int main(int argc, char *argv[])
 		die("Usage: %s body", argv[0]);
 	}
 
+	unsigned int pos[] = {10, 20, 30, 400};
+    char background_color[] = "#3e3e3e";
+    char font_color[] = "#ececec";
+
 	struct sigaction act_expire, act_ignore;
 
 	act_expire.sa_handler = expire;
@@ -110,9 +123,6 @@ int main(int argc, char *argv[])
 	int screen = DefaultScreen(display);
 	Visual *visual = DefaultVisual(display, screen);
 	Colormap colormap = DefaultColormap(display, screen);
-
-	int screen_width = DisplayWidth(display, screen);
-	int screen_height = DisplayHeight(display, screen);
 
 	XSetWindowAttributes attributes;
 	attributes.override_redirect = True;
@@ -151,18 +161,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	unsigned int x = pos_x;
-	unsigned int y = pos_y;
 	unsigned int text_height = font->ascent - font->descent;
 	unsigned int height = (num_of_lines - 1) * line_spacing + num_of_lines * text_height + 2 * padding;
 
-	if (corner == TOP_RIGHT || corner == BOTTOM_RIGHT)
-		x = screen_width - width - border_size * 2 - pos_x;
-
-	if (corner == BOTTOM_LEFT || corner == BOTTOM_RIGHT)
-		y = screen_height - height - border_size * 2 - pos_y;
-
-	window = XCreateWindow(display, RootWindow(display, screen), x, y, width, height, border_size, DefaultDepth(display, screen),
+	window = XCreateWindow(display, RootWindow(display, screen), pos[0], pos[1], width, height, border_size, DefaultDepth(display, screen),
 						   CopyFromParent, visual, CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attributes);
 
 	XftDraw *draw = XftDrawCreate(display, window, visual, colormap);
