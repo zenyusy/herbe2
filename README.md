@@ -1,6 +1,7 @@
 # changes
 
-no more config(.def).h
+- no more config(.def).h
+- 1 or 2 windows
 
 ---
 

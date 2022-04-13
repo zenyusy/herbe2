@@ -25,7 +25,8 @@ const unsigned int duration = 5; /* in seconds */
 #define EXIT_DISMISS 2
 
 Display *display;
-Window window;
+Window window[2];
+int num_of_w = 1;
 int exit_code = EXIT_DISMISS;
 
 static void die(const char *format, ...)
@@ -84,7 +85,8 @@ void expire(int sig)
 	XEvent event;
 	event.type = ButtonPress;
 	event.xbutton.button = (sig == SIGUSR2) ? (ACTION_BUTTON) : (DISMISS_BUTTON);
-	XSendEvent(display, window, 0, 0, &event);
+    for (int w = 0; w < num_of_w; w++)
+ 		XSendEvent(display, window[w], 0, 0, &event);
 	XFlush(display);
 }
 
@@ -97,6 +99,19 @@ int main(int argc, char *argv[])
 	}
 
 	unsigned int pos[] = {10, 20, 30, 400};
+ 	char *hu;
+ 	hu = getenv("HbP");
+ 	if (hu && strlen(hu) > 2){
+ 		char *tail;
+ 		int p = 0;
+ 		do {
+ 			pos[p] = strtol(hu, &tail, 0);
+ 			hu = tail + 1;
+ 		} while (*tail && p++ < 4);
+ 		if (p > 2)
+ 			num_of_w = 2;
+ 	}
+
     char background_color[] = "#3e3e3e";
     char font_color[] = "#ececec";
 
@@ -164,14 +179,19 @@ int main(int argc, char *argv[])
 	unsigned int text_height = font->ascent - font->descent;
 	unsigned int height = (num_of_lines - 1) * line_spacing + num_of_lines * text_height + 2 * padding;
 
-	window = XCreateWindow(display, RootWindow(display, screen), pos[0], pos[1], width, height, border_size, DefaultDepth(display, screen),
+ 	for (int w = 0; w < num_of_w; w++)
+        window[w] = XCreateWindow(display, RootWindow(display, screen), pos[w<<1], pos[(w<<1)+1], width, height, border_size, DefaultDepth(display, screen),
 						   CopyFromParent, visual, CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attributes);
 
-	XftDraw *draw = XftDrawCreate(display, window, visual, colormap);
+ 	XftDraw **draw = malloc(num_of_w * sizeof(XftDraw*));
+ 	if (!draw)
+ 		die("malloc draw failed");
+ 	for (int w = 0; w < num_of_w; w++) {
+ 		draw[w]= XftDrawCreate(display, window[w], visual, colormap);
+ 		XSelectInput(display, window[w], ExposureMask | ButtonPress);
+ 		XMapWindow(display, window[w]);
+ 	}
 	XftColorAllocName(display, visual, colormap, font_color, &color);
-
-	XSelectInput(display, window, ExposureMask | ButtonPress);
-	XMapWindow(display, window);
 
 	sem_t *mutex = sem_open("/herbe", O_CREAT, 0644, 1);
 	sem_wait(mutex);
@@ -189,10 +209,12 @@ int main(int argc, char *argv[])
 
 		if (event.type == Expose)
 		{
-			XClearWindow(display, window);
-			for (int i = 0; i < num_of_lines; i++)
-				XftDrawStringUtf8(draw, &color, font, padding, line_spacing * i + text_height * (i + 1) + padding,
-								  (FcChar8 *)lines[i], strlen(lines[i]));
+ 			for (int w = 0; w < num_of_w; w++)
+ 				XClearWindow(display, window[w]);
+ 			for (int i = 0; i < num_of_lines; i++) {
+ 				for (int d = 0; d < num_of_w; d++)
+ 					XftDrawStringUtf8(draw[d], &color, font, padding, line_spacing * i + text_height * (i + 1) + padding, (FcChar8 *)lines[i], strlen(lines[i]));
+ 			}
 		}
 		else if (event.type == ButtonPress)
 		{
@@ -209,11 +231,13 @@ int main(int argc, char *argv[])
 	sem_post(mutex);
 	sem_close(mutex);
 
+ 	for (int w = 0; w < num_of_w; w++)
+ 		XftDrawDestroy(draw[w]);
 	for (int i = 0; i < num_of_lines; i++)
 		free(lines[i]);
 
 	free(lines);
-	XftDrawDestroy(draw);
+	free(draw);
 	XftColorFree(display, visual, colormap, &color);
 	XftFontClose(display, font);
 	XCloseDisplay(display);
