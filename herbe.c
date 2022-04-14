@@ -15,7 +15,6 @@ const unsigned line_spacing = 5;
 const unsigned int padding = 15;
 const unsigned int width = 450;
 const unsigned int border_size = 2;
-const unsigned int duration = 5; /* in seconds */
 
 #define DISMISS_BUTTON Button1
 #define ACTION_BUTTON Button3
@@ -111,6 +110,11 @@ int main(int argc, char *argv[])
  		if (p > 2)
  			num_of_w = 2;
  	}
+
+    unsigned int duration = 5; /* in seconds */
+    hu = getenv("HbD");
+    if (hu && strlen(hu))
+        duration = atoi(hu);
 
     char background_color[] = "#3e3e3e";
     hu = getenv("HbB");

@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  CFLAGS: -g
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,7 +23,7 @@ jobs:
     - name: X
       uses: GabrielBB/xvfb-action@v1
       with:
-        run: valgrind --leak-check=full ./herbe abc
+        run: valgrind --leak-check=full ./herbe abc_hdwiuq_u1dh
     #- uses: actions/upload-artifact@v2
     #  with:
     #      name: binout
